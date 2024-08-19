@@ -2,7 +2,7 @@ const apiUrlScript4 = 'https://apidemo.geoeducacion.com.ar/api/testing/historial
 
 // Inicializar el gráfico una vez que el DOM esté cargado
 document.addEventListener('DOMContentLoaded', () => {
-    var chart4 = echarts.init(document.getElementById('chart4'));
+var chart4 = echarts.init(document.getElementById('chart4'));
 
     // Función para inicializar el gráfico
     function initChart(data) {
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             yAxis: {
                 type: 'value',
                 min: 0,
-                max: 1,
+                max: 100,
                 axisLabel: {
                     formatter: '{value}%'
                 }
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             series: [{
                 name: 'Asistencia',
                 type: 'line',
-                data: data.map(item => item.asistencia) // Asistencia en el eje Y
+                data: data.map(item => item.asistencia*100) // Asistencia en el eje Y
             }]
         };
 
