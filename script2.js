@@ -1,10 +1,16 @@
-const url = 'https://apidemo.geoeducacion.com.ar/api/testing/asistencia/1';
+// script2.js
 
-fetch(url)
+const apiUrlScript2 = 'https://apidemo.geoeducacion.com.ar/api/testing/asistencia/1';
+
+    var chart2 = echarts.init(document.getElementById('chart2'));
+
+fetch(apiUrlScript2)
     .then(response => response.json())
     .then(responseData => {
+        console.log(responseData);
         const estudiantes = responseData.data;
 
+        // Verificar que el resultado sea un array válido de estudiantes
         if (!Array.isArray(estudiantes)) {
             throw new Error('El resultado de la API no contiene un array válido de estudiantes');
         }
@@ -26,19 +32,14 @@ fetch(url)
             return (presentes / (presentes + ausentes)) * 100;
         });
 
-        var dom = document.getElementById('chart-container');
-        var myChart = echarts.init(dom, null, {
-            renderer: 'canvas',
-            useDirtyRect: false
-        });
-
-        var option = {
+        // Configuración del gráfico 2
+        var option2 = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
                 },
-                formatter: '{b}: {c}%'
+                formatter: '{b}: {c}%' // Mostrar porcentaje en el tooltip
             },
             grid: {
                 left: '3%',
@@ -73,10 +74,12 @@ fetch(url)
             ]
         };
 
-        if (option && typeof option === 'object') {
-            myChart.setOption(option);
+        // Establecer las opciones del gráfico 2
+        if (option2 && typeof option2 === 'object') {
+            chart2.setOption(option2);
         }
 
-        window.addEventListener('resize', myChart.resize);
+        // Ajustar el tamaño del gráfico al redimensionar la ventana
+        window.addEventListener('resize', chart2.resize);
     })
-    .catch(error => console.log(error));
+    .catch(error => console.error('Error al cargar los datos:', error));

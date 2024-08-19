@@ -1,6 +1,7 @@
-const url = 'https://apidemo.geoeducacion.com.ar/api/testing/estudiantes/1';
+const apiUrlScript1 = 'https://apidemo.geoeducacion.com.ar/api/testing/estudiantes/1';
+var chart1 = echarts.init(document.getElementById('chart1'));
 
-fetch(url)
+fetch(apiUrlScript1)
     .then(response => response.json())
     .then(responseData => {
         const estudiantes = responseData.data;
@@ -20,13 +21,7 @@ fetch(url)
             name, value
         }));
 
-        var dom = document.getElementById('chart-container');
-        var myChart = echarts.init(dom, null, {
-            renderer: 'canvas',
-            useDirtyRect: false
-        });
-
-        var option = {
+        var option1 = {
             tooltip: {
                 trigger: 'item'
             },
@@ -64,12 +59,8 @@ fetch(url)
             ]
         };
 
-        if (option && typeof option === 'object') {
-            myChart.setOption(option);
-        }
+        chart1.setOption(option1);
 
-        window.addEventListener('resize', myChart.resize);
+        window.addEventListener('resize', chart1.resize);
     })
     .catch(error => console.log(error));
-
-

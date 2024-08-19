@@ -1,44 +1,38 @@
-const url = 'https://apidemo.geoeducacion.com.ar/api/testing/asistencia/1';
+const apiUrlScript7 = 'https://apidemo.geoeducacion.com.ar/api/testing/comunicados/1';
 
-fetch(url)
+fetch(apiUrlScript7)
     .then(response => response.json())
     .then(responseData => {
-        const estudiantes = responseData.data;
+        const datos = responseData.data[0];
 
-        if (!Array.isArray(estudiantes)) {
-            throw new Error('El resultado de la API no contiene un array válido de estudiantes');
+        if (!datos) {
+            throw new Error('No se encontraron datos válidos en la respuesta de la API');
         }
 
-        // Preparar los datos para el gráfico de barras
-        const nivelesContados = estudiantes.reduce((acc, item) => {
-            if (!acc[item.nivel]) {
-                acc[item.nivel] = { presentes: 0, ausentes: 0 };
-            }
-            acc[item.nivel].presentes += item.presentes;
-            acc[item.nivel].ausentes += item.ausentes;
-            return acc;
-        }, {});
+        // Preparar los datos para el gráfico
+        const total = datos.total;
+        const entregados = datos.entregados;
+        const pendientes = datos.pendientes;
+        const error = datos.error;
 
-        // Convertir a formato adecuado para el gráfico de barras
-        const niveles = Object.keys(nivelesContados);
-        const porcentajeAsistencia = niveles.map(nivel => {
-            const { presentes, ausentes } = nivelesContados[nivel];
-            return (presentes / (presentes + ausentes)) * 100;
-        });
+        const categorias = ['Entregados', 'Pendientes', 'Errores'];
+        const valores = [entregados, pendientes, error];
 
-        var dom = document.getElementById('chart-container');
-        var myChart = echarts.init(dom, null, {
-            renderer: 'canvas',
-            useDirtyRect: false
-        });
+        // Inicializar el gráfico
+        const dom = document.getElementById('chart7');
+        if (!dom) {
+            throw new Error('El contenedor del gráfico no se encuentra en el DOM');
+        }
 
-        var option = {
+        const myChart = echarts.init(dom);
+
+        const option = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
                 },
-                formatter: '{b}: {c}%'
+                formatter: '{b}: {c}'
             },
             grid: {
                 left: '3%',
@@ -49,7 +43,7 @@ fetch(url)
             xAxis: [
                 {
                     type: 'category',
-                    data: niveles, // Utiliza los niveles
+                    data: categorias,
                     axisTick: {
                         alignWithLabel: true
                     }
@@ -57,26 +51,25 @@ fetch(url)
             ],
             yAxis: [
                 {
-                    type: 'value',
-                    axisLabel: {
-                        formatter: '{value}%' // Mostrar como porcentaje
-                    }
+                    type: 'value'
                 }
             ],
             series: [
                 {
-                    name: 'Asistencia',
+                    name: 'Estado de Entrega',
                     type: 'bar',
                     barWidth: '60%',
-                    data: porcentajeAsistencia // Porcentaje de asistencia
+                    data: valores,
+                    itemStyle: {
+                        color: '#2196F3'
+                    }
                 }
             ]
         };
 
-        if (option && typeof option === 'object') {
-            myChart.setOption(option);
-        }
+        myChart.setOption(option);
 
-        window.addEventListener('resize', myChart.resize);
+        // Ajustar el tamaño del gráfico al redimensionar la ventana
+        window.addEventListener('resize', () => myChart.resize());
     })
-    .catch(error => console.log(error));
+    .catch(error => console.error('Error al cargar los datos:', error));
