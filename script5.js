@@ -1,82 +1,61 @@
-const url = 'https://apidemo.geoeducacion.com.ar/api/testing/asistencia/1';
+const apiUrl = 'https://apidemo.geoeducacion.com.ar/api/testing/calificaciones/1';
 
-fetch(url)
-    .then(response => response.json())
-    .then(responseData => {
-        const estudiantes = responseData.data;
+function initChart(data) {
+    const chartDom = document.getElementById('chart-container');
+    const myChart = echarts.init(chartDom);
+    let aprobados= 0;
+    let desaprobados=0;
+    data.forEach(curso=> {
+        aprobados+=curso.aprobados;
+        desaprobados+=curso.desaprobados;
+    });
 
-        if (!Array.isArray(estudiantes)) {
-            throw new Error('El resultado de la API no contiene un array válido de estudiantes');
-        }
-
-        // Preparar los datos para el gráfico de barras
-        const nivelesContados = estudiantes.reduce((acc, item) => {
-            if (!acc[item.nivel]) {
-                acc[item.nivel] = { presentes: 0, ausentes: 0 };
+    // Configuración del gráfico
+    const option = {
+        title: {
+            text: 'Nivel general de calificaciones',
+            subtext: '',
+            left: 'center'
+          },
+          tooltip: {
+            trigger: 'item'
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left'
+          },
+          series: [
+            {
+              name: 'Alumnos',
+              type: 'pie',
+              radius: '50%',
+              data:[{value: aprobados, name: "Aprobados"},
+              {value: desaprobados, name: "Desaprobados"}],
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
             }
-            acc[item.nivel].presentes += item.presentes;
-            acc[item.nivel].ausentes += item.ausentes;
-            return acc;
-        }, {});
+          ]
+    };
 
-        // Convertir a formato adecuado para el gráfico de barras
-        const niveles = Object.keys(nivelesContados);
-        const porcentajeAsistencia = niveles.map(nivel => {
-            const { presentes, ausentes } = nivelesContados[nivel];
-            return (presentes / (presentes + ausentes)) * 100;
-        });
+    // Renderizar el gráfico
+    myChart.setOption(option);
+}
 
-        var dom = document.getElementById('chart-container');
-        var myChart = echarts.init(dom, null, {
-            renderer: 'canvas',
-            useDirtyRect: false
-        });
-
-        var option = {
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: {
-                    type: 'shadow'
-                },
-                formatter: '{b}: {c}%'
-            },
-            grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '3%',
-                containLabel: true
-            },
-            xAxis: [
-                {
-                    type: 'category',
-                    data: niveles, // Utiliza los niveles
-                    axisTick: {
-                        alignWithLabel: true
-                    }
-                }
-            ],
-            yAxis: [
-                {
-                    type: 'value',
-                    axisLabel: {
-                        formatter: '{value}%' // Mostrar como porcentaje
-                    }
-                }
-            ],
-            series: [
-                {
-                    name: 'Asistencia',
-                    type: 'bar',
-                    barWidth: '60%',
-                    data: porcentajeAsistencia // Porcentaje de asistencia
-                }
-            ]
-        };
-
-        if (option && typeof option === 'object') {
-            myChart.setOption(option);
+// Obtener los datos de la API y renderizar el gráfico
+fetch(apiUrl)
+    .then(response => response.json())
+    .then(json => {
+        if (json.success) {
+            initChart(json.data);
+        } else {
+            console.error('Error al obtener los datos:', json.messages);
         }
-
-        window.addEventListener('resize', myChart.resize);
     })
-    .catch(error => console.log(error));
+    .catch(error => {
+        console.error('Error en la solicitud:', error);
+    });
