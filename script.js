@@ -1,14 +1,14 @@
-const apiUrlScript4 = 'https://apidemo.geoeducacion.com.ar/api/testing/historial_asistencia/1';
+const apiUrlScript = 'https://apidemo.geoeducacion.com.ar/api/testing/control/1';
 
 // Inicializar el gráfico una vez que el DOM esté cargado
 document.addEventListener('DOMContentLoaded', () => {
-var chart4 = echarts.init(document.getElementById('chart4'));
+var chart = echarts.init(document.getElementById('chart'));
 
     // Función para inicializar el gráfico
     function initChart(data) {
-        const option4 = {
+        const option = {
             title: {
-                text: 'Evolución Anual de Asistencia'
+                text: 'Control de mediciones'
             },
             tooltip: {
                 trigger: 'axis'
@@ -33,11 +33,11 @@ var chart4 = echarts.init(document.getElementById('chart4'));
         };
 
         // Renderizar el gráfico
-        chart4.setOption(option4);
+        chart.setOption(option);
     }
 
     // Obtener los datos de la API y renderizar el gráfico
-    fetch(apiUrlScript4)
+    fetch(apiUrlScript)
         .then(response => response.json())
         .then(json => {
             if (json.success) {
