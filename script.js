@@ -48,6 +48,4 @@ var chart4 = echarts.init(document.getElementById('chart4'));
         })
         .catch(error => console.error('Error al cargar los datos:', error));
 
-    // Ajustar el tamaño del gráfico al redimensionar la ventana
-    window.addEventListener('resize', () => chart4.resize());
 });
