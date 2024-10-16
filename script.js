@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const caseSelector = document.getElementById('case-selector');
     const chart = echarts.init(document.getElementById('chart-container'));
 
-    // Función para inicializar el gráfico
+    // Función para inicializar el gráfico //pRUEBA
     function initChart(data) {
         const values = data.valores.map(item => item.y);
         const xAxisData = data.valores.map(item => item.x);
