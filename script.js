@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const caseSelector = document.getElementById('case-selector');
     const chart = echarts.init(document.getElementById('chart-container'));
 
-    // Función para inicializar el gráfico //pRUEBA
+    // Función para inicializar el gráfico
     function initChart(data) {
         const values = data.valores.map(item => item.y);
         const xAxisData = data.valores.map(item => item.x);
@@ -16,17 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 trigger: 'axis'
             },
             grid: {
-                left: '10%', // Aumenta el margen izquierdo si es necesario
-                right: '15%', // Aumenta el margen derecho para que "Muestreo" no se corte
+                left: '10%',
+                right: '15%',
                 bottom: '10%',
-                containLabel: true // Asegura que las etiquetas no se corten
+                containLabel: true
             },
             xAxis: {
                 type: 'category',
-                data: xAxisData, // Muestras en el eje X
-                name: 'Muestreo', // Ajusta aquí si es necesario
-                nameLocation: 'middle', // Coloca el nombre en el medio
-                nameGap: 25 // Espacio entre el nombre y el eje
+                data: xAxisData,
+                name: 'Muestreo',
+                nameLocation: 'middle',
+                nameGap: 25
             },
             yAxis: {
                 type: 'value',
@@ -44,17 +44,49 @@ document.addEventListener('DOMContentLoaded', () => {
                             { yAxis: data.media, name: 'Media' },
                             {
                                 yAxis: data.lsc,
-                                name: 'LSC (Límite Superior)',
+                                name: 'Límite Superior (LSC)',
                                 lineStyle: {
-                                    color: '#ff4d4d', // Rojo para LSC
+                                    color: '#ff4d4d',
                                     type: 'dashed'
                                 }
                             },
                             {
                                 yAxis: data.lic,
-                                name: 'LIC (Límite Inferior)',
+                                name: 'Límite Inferior (LIC)',
                                 lineStyle: {
-                                    color: '#ff4d4d', // Rojo para LIC
+                                    color: '#ff4d4d',
+                                    type: 'dashed'
+                                }
+                            },
+                            {
+                                yAxis: data.media + 6,
+                                name: 'Límite Superior 2-sigma',
+                                lineStyle: {
+                                    color: '#ffcc00',
+                                    type: 'dashed'
+                                }
+                            },
+                            {
+                                yAxis: data.media - 6,
+                                name: 'Límite Inferior 2-sigma',
+                                lineStyle: {
+                                    color: '#ffcc00',
+                                    type: 'dashed'
+                                }
+                            },
+                            {
+                                yAxis: data.media + 3,
+                                name: 'Límite Superior 1-sigma',
+                                lineStyle: {
+                                    color: '#66cc66',
+                                    type: 'dashed'
+                                }
+                            },
+                            {
+                                yAxis: data.media - 3,
+                                name: 'Límite Inferior 1-sigma',
+                                lineStyle: {
+                                    color: '#66cc66',
                                     type: 'dashed'
                                 }
                             }
@@ -66,8 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             ]
         };
-        
-        
 
         chart.setOption(option);
         checkForAnomalies(values, data);
@@ -76,17 +106,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para verificar situaciones fuera de control
     function checkForAnomalies(values, data) {
         const anomalies = [];
+        let pointsAboveLSC = 0;
+        let pointsBelowLIC = 0;
+        let consecutiveAbove = 0;
+        let consecutiveBelow = 0;
 
-        values.forEach((value, index) => {
-            if (value > data.lsc || value < data.lic) {
-                anomalies.push(`Punto ${index + 1} está fuera de control.`);
+        // Verificación de condiciones
+        values.forEach(value => {
+            if (value > data.lsc) {
+                pointsAboveLSC++;
+            } else if (value < data.lic) {
+                pointsBelowLIC++;
+            }
+
+            // Verificar 8 puntos en el mismo lado respecto a la media
+            if (value > data.media) {
+                consecutiveAbove++;
+                consecutiveBelow = 0; // Reiniciar contador de puntos por debajo
+                if (consecutiveAbove >= 8) {
+                    anomalies.push('8 puntos consecutivos por encima de la media (normal).');
+                }
+            } else if (value < data.media) {
+                consecutiveBelow++;
+                consecutiveAbove = 0; // Reiniciar contador de puntos por encima
+                if (consecutiveBelow >= 8) {
+                    anomalies.push('8 puntos consecutivos por debajo de la media (normal).');
+                }
+            } else {
+                consecutiveAbove = 0; // Reiniciar contador si está dentro
+                consecutiveBelow = 0; // Reiniciar contador si está dentro
             }
         });
 
+        // Verificar condiciones de alerta
+        if (pointsAboveLSC > 0) {
+            anomalies.push('Valores fuera del Límite Superior (LSC).');
+        }
+        if (pointsBelowLIC > 0) {
+            anomalies.push('Valores fuera del Límite Inferior (LIC).');
+        }
+
+        // Verificar 2 de 3 puntos fuera de 2-sigma
+        const pointsOutside2Sigma = values.filter(value => value > data.media + 6 || value < data.media - 6);
+        if (pointsOutside2Sigma.length >= 2) {
+            anomalies.push('Tendencia fuera de control: 2 de 3 puntos fuera de 2-sigma.');
+        }
+
+        // Verificar 4 de 5 puntos fuera de sigma
+        const pointsOutsideSigma = values.filter(value => value > data.media + 3 || value < data.media - 3);
+        if (pointsOutsideSigma.length >= 4) {
+            anomalies.push('Tendencia fuera de control: 4 de 5 puntos fuera de sigma.');
+        }
+
+        // Mostrar alertas si hay anomalías
         if (anomalies.length > 0) {
             Swal.fire({
                 title: '¡Alerta!',
-                text: `Alerta: ${anomalies.join('\n')}`,
+                text: `Condiciones fuera de control detectadas:\n${anomalies.join('\n')}`,
                 icon: 'warning',
                 confirmButtonText: 'Aceptar'
             });
